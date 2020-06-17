@@ -1,0 +1,22 @@
+Type: AWS::SES::ReceiptRule
+Properties:
+  After:
+    Ref: SESRulesSpam
+  Rule:
+    Name: Forward
+    Enabled: true
+    ScanEnabled: false
+    Actions:
+      - S3Action:
+          BucketName:
+            Ref: S3BucketEmailForward
+      - LambdaAction:
+          FunctionArn:
+            Fn::GetAtt: [ProcessLambdaFunction, Arn]
+          InvocationType: 'RequestResponse'
+      - BounceAction:
+          Message: 'Message content rejected'
+          Sender: ${self:custom.stage.sender}
+          SmtpReplyCode: 500
+          StatusCode: '5.6.1'
+  RuleSetName: default-rule-set

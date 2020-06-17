@@ -1,0 +1,37 @@
+# you can add statements to the Lambda function's IAM Role here
+#  - Effect: "Allow"
+#    Action:
+#      - "s3:ListBucket"
+#    Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
+#  - Effect: "Allow"
+#    Action:
+#      - "s3:PutObject"
+#    Resource:
+#      Fn::Join:
+#        - ""
+#        - - "arn:aws:s3:::"
+#          - "Ref" : "ServerlessDeploymentBucket"
+#          - "/*"
+- Effect: "Allow"
+  Action:
+    - ses:SendRawEmail
+    - ses:sendBounce
+  Resource: '*'
+- Effect: "Allow"
+  Action:
+    - s3:GetObject
+    - s3:PutObject
+  Resource:
+    Fn::Join:
+      - ''
+      - - 'arn:aws:s3:::'
+        -
+          Ref: 'S3BucketEmailForward'
+        - '/*'
+- Effect: "Allow"
+  Action:
+    - dynamodb:getItem
+    - dynamodb:query
+  Resource:
+    - Fn::GetAtt: [DynamodbForwards, Arn]
+    - Fn::GetAtt: [DynamodbDomains, Arn]

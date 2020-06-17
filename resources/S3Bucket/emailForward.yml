@@ -1,0 +1,24 @@
+Type: AWS::S3::Bucket
+Properties:
+  BucketName: ${self:custom.stage.bucketPrefix}-${self:custom.stage.region}
+  LifecycleConfiguration:
+    Rules:
+      -
+        Status: Enabled
+        ExpirationInDays: 7
+  Tags:
+    - Key: project
+      Value: emailForward
+    - Key: role
+      Value: email
+    - Key: service
+      Value: cache
+    - Key: billing_entity
+      Value: ${self:custom.stage.billingTag}
+    - Key: Name
+      Value: ${self:custom.stage.bucketPrefix}-${self:custom.stage.region}
+Outputs:
+  CacheBucket:
+   Description: "Bucket for caching incoming EMails"
+   Value:
+     Ref: S3BucketEmailForward

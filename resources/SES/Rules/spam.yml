@@ -1,0 +1,17 @@
+Type: AWS::SES::ReceiptRule
+Properties:
+  Rule:
+    Name: DropSpam-BounceDMARC
+    Enabled: true
+    ScanEnabled: true
+    Actions:
+      - LambdaAction:
+          FunctionArn:
+            Fn::GetAtt: [SpamLambdaFunction, Arn]
+          InvocationType: 'RequestResponse'
+      - BounceAction:
+          Message: 'Message content rejected'
+          Sender: ${self:custom.stage.sender}
+          SmtpReplyCode: 500
+          StatusCode: '5.6.1'
+  RuleSetName: default-rule-set

@@ -1,0 +1,2 @@
+handler: services/spam.handler
+name: ${self:service}-spam

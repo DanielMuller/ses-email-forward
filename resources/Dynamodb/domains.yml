@@ -1,0 +1,23 @@
+Type: AWS::DynamoDB::Table
+Properties:
+  TableName: ${self:custom.stage.bucketPrefix}-domains
+  BillingMode: PAY_PER_REQUEST
+  AttributeDefinitions:
+    -
+      AttributeName: 'domain'
+      AttributeType: 'S'
+  KeySchema:
+    -
+      AttributeName: 'domain'
+      KeyType: 'HASH'
+  Tags:
+    - Key: project
+      Value: emailForward
+    - Key: role
+      Value: email
+    - Key: service
+      Value: cache
+    - Key: billing_entity
+      Value: ${self:custom.stage.billingTag}
+    - Key: Name
+      Value: ${self:custom.stage.bucketPrefix}

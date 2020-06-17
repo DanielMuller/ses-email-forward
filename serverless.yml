@@ -1,0 +1,45 @@
+service: sesEmailForward
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+frameworkVersion: ">=1.37.1 <2.0.0"
+
+custom:
+  stage: ${file(stages/${self:provider.stage}.yml)}
+# Add custom variables here. You can re-use variables defined in the stage yml
+# customStageVar: ${self:custom.stage.customStageVar}
+  webpack:
+    includeModules:
+      forceExclude:
+        - aws-sdk
+
+plugins:
+  - serverless-deployment-bucket
+  - serverless-pseudo-parameters
+  - serverless-webpack
+
+package:
+  individually: true
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: ${opt:stage, 'production'}
+  region: ${opt:region, self:custom.stage.region}
+  profile: ${self:custom.stage.profile}
+  memorySize: ${self:custom.stage.lambda.memorySize, '128'}
+  timeout: ${self:custom.stage.lambda.timeout, '10'}
+  logRetentionInDays: ${self:custom.stage.lambda.logRetention, '1'}
+  iamRoleStatements: ${file(config/iamRoleStatements.yml)}
+  deploymentBucket:
+    name: com.serverless.${self:custom.stage.profile}.${self:provider.region}.deploys
+  tags:
+    project: emailForward
+    role: email
+    service: cache
+    billing_entity: ${self:custom.stage.billingTag}
+    Name: ${self:service}-${self:custom.stage.region}
+
+functions: ${file(lib/config.js):functions}
+resources:
+  Resources: ${file(lib/config.js):resources}
+  Outputs: ${file(lib/config.js):outputs}

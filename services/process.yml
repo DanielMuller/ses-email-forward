@@ -1,0 +1,11 @@
+handler: services/process.handler
+name: ${self:service}-process
+memorySize: 256
+timeout: 30
+environment:
+  bucketName:
+    Ref: S3BucketEmailForward
+  tableNameAliases:
+    Ref: DynamodbForwards
+  tableNameDomains:
+    Ref: DynamodbDomains

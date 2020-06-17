@@ -1,0 +1,24 @@
+Type: AWS::S3::BucketPolicy
+Properties:
+  Bucket:
+    Ref: S3BucketEmailForward
+  PolicyDocument:
+    Statement:
+      -
+        Effect: Allow
+        Action:
+          - s3:PutObject
+        Resource:
+          Fn::Join:
+            - ''
+            -
+              - 'arn:aws:s3:::'
+              -
+                Ref: S3BucketEmailForward
+              - '/*'
+        Principal:
+          Service: ses.amazonaws.com
+        Condition:
+          StringEquals:
+            aws:Referer:
+              - Ref: AWS::AccountId
