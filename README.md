@@ -1,50 +1,77 @@
-# Functions split
-Boilerplate template for [Serverless](https://serverless.com) allowing to easily separate each function into it's own dedicated file or folder.
+# SES Email Forward
+Uses SES incoming SMTP to forward E-mails to the final recipient, based on https://github.com/arithmetric/aws-lambda-ses-forwarder. Useful for small domains, where you don't want users to manage another Inbox.
 
-The template is for [NodeJS 12.x](https://nodejs.org/) and it uses [webpack plugin](https://github.com/serverless-heaven/serverless-webpack) to reduce each packaged function.
+Address aliases are stored in a DynamoDB table.
 
-## Project creation
-`sls create --template-url https://github.com/Spuul/serverless-template-aws-webpack-nodejs/tree/master/ --path my-new-service --name awesome-service`
+## Disclaimer
+### From rewrite
+SES can only send from a validated domain. To be able to forward any "From domain", it needs to be rewritten.
 
-### Configuration
-Edit *config/dev.yml* and *config/production.yml* to suit your needs.
+`John Doe <john.doe@corporation.com>` sends a message to `bob@example.com`.
 
-Run `nvm use` to load the right node version and `npm install` to install all the dependencies.
+The message will be forwarded to `bob@gmail.com` with the new sender `John Doe <forwarder-daemon@example.com>` and a `Reply-To: John Doe <john.doe@corporation.com>`.
 
-## File structure
-- **events/**  
-  Store all events related to testing
-- **lib/config.js**  
-  Javascript module to build serverless.yml
-- **resources/**  
-  Contains yml files describing each resource. Definitions can be nested 2 levels deep, in a subfolder describing the AWS resource, like `IamRole/specificServiceRole.yml`.
-  The folder name is expected to follow [Serverless convention](https://serverless.com/framework/docs/providers/aws/guide/resources#aws-cloudformation-resource-reference) for naming.
-- **services/**  
-  Contains each individual Lambda function (.js) and it's definitions (.yml).
-  In addition to the usual *handler* and *event* definitions, the yml can also hold a specific *resource* definition related to the function, without the need for an entry in the *resources/* folder.
-- **stages/**  
-  Stage specific configurations.
+## Prerequisites
+* An AWS account
+* A role with the relevant rights (Administrator if you are lazy)
+* NodeJS 12, ideally with nvm
+* Use a region in which "EMail Receiving" is available
+
+## Setup
+```bash
+git clone https://github.com/DanielMuller/ses-email-forward
+cd ses-email-forward/
+nvm use
+npm ci
+cp -a stages/production.sample.yml stages/production.yml
+```
+Edit stages/production.yml to suite your setup.
+
+## Whitelist domains
+You need to whitelist all domains that you want to use. Including domain aliases and the domain used for global bounces defined in the settings as _sender_.
 
 ## Deploy
-`sls deploy` (development) or `sls -s production deploy`
+```bash
+npx serverless deploy
+```
 
-### Webpack
-Webpack will automatically bundle only the used dependencies and create a unique and smaller bundle for each function.
+## Configure aliases
+There is no UI to manage aliases, all aliases are manually entered into DynamoDB (Console, CLI, ...).
 
-## Logging
-[lambda-log](https://www.npmjs.com/package/lambda-log) provides a more structured way of logging:
-```javascript
-const log = require('lambda-log')
-log.info('Log Tag', {key1: value1, key2: value2})
+### Domain aliases
+```json
+{
+  "domain": "example.com",
+  "aliasfor": "another-example.com"
+}
 ```
-Which will result in:
+
+### EMail aliases
+To redirect to multiple users (group feature), create as many entries as destinations.
+
+```json
+{
+  "alias": "john@example.com",
+  "destination": "jonh@gmail.com"
+}
 ```
-{"_logLevel":"info","msg":"Log Tag","key1":"value1","key2":"value2","_tags":["log","info"]}
-```
-You can also add meta data by default:
-```
-log.options.meta.fct = 'fctName'
-log.options.meta.requestId = event.requestContext.requestId
-log.options.meta.path = event.path
-log.options.meta.sourceIp = event.requestContext.identity.sourceIp
-```
+
+## Update MX
+Update your domain's MX to point to `10 inbound-smtp.<AWS Region>.amazonaws.com.`
+
+## Function
+### Spam
+All domains are passed through the spam rules:
+* Messages tagged as SPAM are silently dropped
+* Messages not passing DMARC are bounced back to the sender
+
+### Forward
+* Messages not intended for a valid recipient are bounced back to the sender.
+
+## Todo
+### Cloudwatch dashboard
+* Add dashboards to have an overview of rejected, bounced and delivered messages
+
+### Handle bounces and complaints
+* Add SNS and Lambda processors to handle bounces and complaints
+* Blacklist bouncing recipients
