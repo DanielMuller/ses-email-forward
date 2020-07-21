@@ -25,7 +25,7 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
     "js-yaml": "^3.14.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "serverless": "^1.72.0",
     "serverless-deployment-bucket": "^1.1.2",
     "serverless-pseudo-parameters": "^2.5.0",
