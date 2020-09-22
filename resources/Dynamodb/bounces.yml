@@ -1,0 +1,32 @@
+Type: AWS::DynamoDB::Table
+Properties:
+  TableName: ${self:custom.stage.bucketPrefix}-bounces
+  BillingMode: PAY_PER_REQUEST
+  AttributeDefinitions:
+    -
+      AttributeName: 'destination'
+      AttributeType: 'S'
+    -
+      AttributeName: 'createdAt'
+      AttributeType: 'N'
+  KeySchema:
+    -
+      AttributeName: 'destination'
+      KeyType: 'HASH'
+    -
+      AttributeName: 'createdAt'
+      KeyType: 'RANGE'
+  TimeToLiveSpecification:
+    AttributeName: validUntil
+    Enabled: true
+  Tags:
+    - Key: project
+      Value: emailForward
+    - Key: role
+      Value: email
+    - Key: service
+      Value: bounces
+    - Key: billing_entity
+      Value: ${self:custom.stage.billingTag}
+    - Key: Name
+      Value: ${self:custom.stage.bucketPrefix}
