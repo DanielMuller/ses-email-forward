@@ -1,0 +1,11 @@
+handler: services/buildForwards.handler
+name: ${self:service}-buildForwards
+memorySize: 512
+timeout: 900
+environment:
+  tableNameAliases:
+    Ref: DynamodbForwards
+  tableNameDefinitions:
+    Ref: DynamodbDefinitions
+  tableNameBounces:
+    Ref: DynamodbBounces

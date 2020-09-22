@@ -31,7 +31,15 @@
 - Effect: "Allow"
   Action:
     - dynamodb:getItem
+    - dynamodb:batchWriteItem
     - dynamodb:query
   Resource:
     - Fn::GetAtt: [DynamodbForwards, Arn]
     - Fn::GetAtt: [DynamodbDomains, Arn]
+    - Fn::GetAtt: [DynamodbDefinitions, Arn]
+    - Fn::GetAtt: [DynamodbBounces, Arn]
+    - Fn::Join:
+      - "/"
+      -
+        - { "Fn::GetAtt": ["DynamodbForwards", "Arn" ] }
+        - "index/*"
