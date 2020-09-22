@@ -9,6 +9,12 @@ Properties:
     -
       AttributeName: 'destination'
       AttributeType: 'S'
+    -
+      AttributeName: 'domain'
+      AttributeType: 'S'
+    -
+      AttributeName: 'updatedAt'
+      AttributeType: 'N'
   KeySchema:
     -
       AttributeName: 'alias'
@@ -16,6 +22,21 @@ Properties:
     -
       AttributeName: 'destination'
       KeyType: 'RANGE'
+  GlobalSecondaryIndexes:
+    - IndexName: domainUpdatedAtIndex
+      KeySchema:
+      - AttributeName: domain
+        KeyType: HASH
+      - AttributeName: updatedAt
+        KeyType: RANGE
+      Projection:
+        NonKeyAttributes:
+        - alias
+        - destination
+        ProjectionType: INCLUDE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 0
+        WriteCapacityUnits: 0
   Tags:
     - Key: project
       Value: emailForward
