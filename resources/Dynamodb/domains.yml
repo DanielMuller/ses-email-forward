@@ -16,7 +16,7 @@ Properties:
     - Key: role
       Value: email
     - Key: service
-      Value: cache
+      Value: domainAliases
     - Key: billing_entity
       Value: ${self:custom.stage.billingTag}
     - Key: Name
