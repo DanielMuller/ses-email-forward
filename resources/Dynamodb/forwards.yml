@@ -37,6 +37,18 @@ Properties:
       ProvisionedThroughput:
         ReadCapacityUnits: 0
         WriteCapacityUnits: 0
+    - IndexName: destinationIndex
+      KeySchema:
+      - AttributeName: destination
+        KeyType: HASH
+      Projection:
+        NonKeyAttributes:
+        - alias
+        - destination
+        ProjectionType: INCLUDE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 0
+        WriteCapacityUnits: 0
   Tags:
     - Key: project
       Value: emailForward
