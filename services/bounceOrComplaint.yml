@@ -1,0 +1,26 @@
+handler: services/bounceOrComplaint.handler
+name: ${self:service}-BounceOrComplaint
+memorySize: 128
+timeout: 120
+events:
+  - sns:
+      arn:
+        Fn::Join:
+          - ':'
+          - - 'arn:aws:sns'
+            - Ref: 'AWS::Region'
+            - Ref: 'AWS::AccountId'
+            - ${self:custom.stage.SNSBounce}
+      topicName: ${self:custom.stage.SNSBounce}
+  - sns:
+      arn:
+        Fn::Join:
+          - ':'
+          - - 'arn:aws:sns'
+            - Ref: 'AWS::Region'
+            - Ref: 'AWS::AccountId'
+            - ${self:custom.stage.SNSComplaint}
+      topicName: ${self:custom.stage.SNSComplaint}
+environment:
+  tableNameBounces:
+    Ref: DynamodbBounces

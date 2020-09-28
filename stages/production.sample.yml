@@ -6,6 +6,8 @@ region: ap-southeast-1 # Replace with your favorite region
 bucketPrefix: my-bucket-prefix
 sender: mailer-daemon@example.com
 billingTag: tagValue
+SNSBounce: sns-topic-bounce
+SNSComplaint: sns-topic-complaint
 lambda:
   memorySize: 128
   timeout: 10
