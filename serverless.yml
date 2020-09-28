@@ -35,7 +35,7 @@ provider:
   tags:
     project: emailForward
     role: email
-    service: cache
+    service: forward
     billing_entity: ${self:custom.stage.billingTag}
     Name: ${self:service}-${self:custom.stage.region}
 
