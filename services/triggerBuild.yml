@@ -1,0 +1,17 @@
+handler: services/triggerBuild.handler
+name: ${self:service}-triggerBuild
+memorySize: 128
+timeout: 120
+events:
+  - stream:
+      type: dynamodb
+      arn:
+        Fn::GetAtt: [DynamodbDefinitions,StreamArn]
+      batchSize: 50
+      batchWindow: 20
+      startingPosition: LATEST
+      maximumRetryAttempts: 2
+      enabled: true
+environment:
+  buildFct:
+    Ref: BuildForwardsLambdaFunction

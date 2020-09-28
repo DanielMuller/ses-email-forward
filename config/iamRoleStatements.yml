@@ -43,3 +43,8 @@
       -
         - { "Fn::GetAtt": ["DynamodbForwards", "Arn" ] }
         - "index/*"
+- Effect: "Allow"
+  Action:
+    - lambda:invokeFunction
+  Resource:
+    - '*'

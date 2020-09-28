@@ -16,6 +16,8 @@ Properties:
     -
       AttributeName: 'alias'
       KeyType: 'RANGE'
+  StreamSpecification:
+    StreamViewType: KEYS_ONLY
   Tags:
     - Key: project
       Value: emailForward
