@@ -1,0 +1,18 @@
+handler: services/updateBounceCount.handler
+name: ${self:service}-updateBounceCount
+memorySize: 256
+timeout: 120
+events:
+  - stream:
+      type: dynamodb
+      arn:
+        Fn::GetAtt: [DynamodbBounces,StreamArn]
+      batchSize: 1
+      startingPosition: LATEST
+      maximumRetryAttempts: 2
+      enabled: true
+environment:
+  tableNameAliases:
+    Ref: DynamodbForwards
+  tableNameBounces:
+    Ref: DynamodbBounces

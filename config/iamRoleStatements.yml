@@ -33,6 +33,8 @@
     - dynamodb:getItem
     - dynamodb:batchWriteItem
     - dynamodb:query
+    - dynamodb:updateItem
+    - dynamodb:putItem
   Resource:
     - Fn::GetAtt: [DynamodbForwards, Arn]
     - Fn::GetAtt: [DynamodbDomains, Arn]

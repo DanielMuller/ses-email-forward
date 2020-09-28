@@ -19,6 +19,8 @@ Properties:
   TimeToLiveSpecification:
     AttributeName: validUntil
     Enabled: true
+  StreamSpecification:
+    StreamViewType: KEYS_ONLY
   Tags:
     - Key: project
       Value: emailForward
