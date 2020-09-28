@@ -141,7 +141,7 @@ const fetchMapping = (data) => {
           if (!item.bounces) {
             item.bounces = 0
           }
-          if (item.bounces <= 1) {
+          if (item.bounces === 0) {
             return item.destination
           } else {
             return null
