@@ -1,7 +1,7 @@
 service: sesEmailForward
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
-frameworkVersion: ">=1.37.1 <2.0.0"
+frameworkVersion: ">=2.0.0"
 
 custom:
   stage: ${file(stages/${self:provider.stage}.yml)}
