@@ -80,11 +80,14 @@ const fetchItems = async () => {
     TableName: tableNameDefinitions,
     KeyConditionExpression: '#domain = :domain',
     ExpressionAttributeValues: {
-      ':domain': domain
+      ':domain': domain,
+      ':true': true
     },
     ExpressionAttributeNames: {
-      '#domain': 'domain'
-    }
+      '#domain': 'domain',
+      '#active': 'active'
+    },
+    FilterExpression: 'attribute_not_exists(#active) or #active = :true'
   }
   const queryResults = {}
   let items
