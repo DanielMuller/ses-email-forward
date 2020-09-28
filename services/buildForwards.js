@@ -13,7 +13,7 @@ var domain = ''
 var bounceCountCache = {}
 
 module.exports.handler = async (event) => {
-  log.info('Event', event)
+  log.info('Event', { event })
 
   resolvedMapping = {}
   forwardMapping = []
