@@ -8,5 +8,6 @@ jspm_packages
 .serverless
 # Webpack folder
 .webpack
-stages/production.yml
+stages/
+!stages/*.sample.yml
 events/
