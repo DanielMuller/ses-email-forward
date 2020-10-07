@@ -16,6 +16,10 @@ The message will be forwarded to `bob@gmail.com` with the new sender `John Doe <
 * A role with the relevant rights (Administrator if you are lazy)
 * NodeJS 12, ideally with nvm
 * Use a region in which "EMail Receiving" is available
+* Manually created SNS queues for bounces and complaints. All domains need to use the same queues
+
+## Whitelist domains
+You need to whitelist all domains that you want to use. Including domain aliases and the domain used for global bounces defined in the settings as _sender_.
 
 ## Setup
 ```bash
@@ -27,16 +31,13 @@ cp -a stages/production.sample.yml stages/production.yml
 ```
 Edit stages/production.yml to suite your setup.
 
-## Whitelist domains
-You need to whitelist all domains that you want to use. Including domain aliases and the domain used for global bounces defined in the settings as _sender_.
-
 ## Deploy
 ```bash
 npx serverless deploy
 ```
 
 ## Configure aliases
-There is no UI to manage aliases, all aliases are manually entered into DynamoDB (Console, CLI, ...).
+You can use [ses-email-forward-ui](https://github.com/DanielMuller/ses-email-forward-ui), or fill them manually in DynamoDB (console, CLI, ...)
 
 ### Domain aliases
 ```json
@@ -46,20 +47,44 @@ There is no UI to manage aliases, all aliases are manually entered into DynamoDB
 }
 ```
 
-### EMail aliases
-To redirect to multiple users (group feature), create as many entries as destinations.
+### EMail definitions
+To redirect to a locally defined alias, omit the domain. Every change in the definition table will trigger a Lambda function that popoulates the alias table. Multiple destinations are entered as an array.
 
 ```json
 {
-  "alias": "john@example.com",
-  "destination": "jonh@gmail.com"
+  "active": true,
+  "alias": "info",
+  "destinations": [
+    "bob@example.com",
+    "john"
+  ],
+  "domain": "mycorp.com",
+  "type": "group"
+}
+```
+```json
+{
+  "active": true,
+  "alias": "john",
+  "destinations": [
+    "john@example.com"
+  ],
+  "domain": "mycorp.com",
+  "type": "person"
 }
 ```
 
 ## Update MX
 Update your domain's MX to point to `10 inbound-smtp.<AWS Region>.amazonaws.com.`
 
-## Function
+## Bounces and Complaints
+* Transient Bounces are stored for 1 day
+* Permanent Bounces are stored for 30 days
+* Complaints are stored for 2 years
+
+Every change in the bounce log table (insertion, deletion) triggers an update on the bounce count. Destinations with a least one bounce count aren't used anymore. Messages to this destinations are silently dropped.
+
+## Functions
 ### Spam
 All domains are passed through the spam rules:
 * Messages tagged as SPAM are silently dropped
@@ -68,10 +93,18 @@ All domains are passed through the spam rules:
 ### Forward
 * Messages not intended for a valid recipient are bounced back to the sender.
 
+### TriggerBuild
+* Triggers `BuildForwards` for every change in the definition table.
+
+### BuildForwards
+* Builds the aliases list from the definition table. Omitting previously bounced destinations and avoiding duplicate destinations.
+
+### BounceOrComplaint
+* Populates the bounce and complaint table.
+
+### UpdateBounceCount
+* Updates bounce counters in the alias table.
+
 ## Todo
 ### Cloudwatch dashboard
 * Add dashboards to have an overview of rejected, bounced and delivered messages
-
-### Handle bounces and complaints
-* Add SNS and Lambda processors to handle bounces and complaints
-* Blacklist bouncing recipients
