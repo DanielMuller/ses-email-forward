@@ -48,5 +48,4 @@
 - Effect: "Allow"
   Action:
     - lambda:invokeFunction
-  Resource:
-    - '*'
+  Resource: '*'

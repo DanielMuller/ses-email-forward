@@ -11,4 +11,4 @@ SNSComplaint: sns-topic-complaint
 lambda:
   memorySize: 128
   timeout: 10
-  logRetention: "30"
+  logRetention: 30

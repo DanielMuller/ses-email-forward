@@ -28,7 +28,7 @@ provider:
   profile: ${self:custom.stage.profile}
   memorySize: ${self:custom.stage.lambda.memorySize, '128'}
   timeout: ${self:custom.stage.lambda.timeout, '10'}
-  logRetentionInDays: ${self:custom.stage.lambda.logRetention, '1'}
+  logRetentionInDays: ${self:custom.stage.lambda.logRetention, 1}
   iamRoleStatements: ${file(config/iamRoleStatements.yml)}
   deploymentBucket:
     name: com.serverless.${self:custom.stage.profile}.${self:provider.region}.deploys
