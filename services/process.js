@@ -302,7 +302,7 @@ const sendMessage = (data) => {
   }
   log.info('sendMessage', {
     message: 'sendMessage: Sending email via SES. ' +
-    'Original recipients: ' + data.originalRecipients.join(', ') +
+    'Original recipients: ' + data.originalRecipients.map(e => { return e.alias }).join(', ') +
     '. Transformed recipients: ' + data.recipients.join(', ') + '.'
   })
   return new Promise(function (resolve, reject) {
