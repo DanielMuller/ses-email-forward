@@ -1,0 +1,5 @@
+Type: AWS::CloudWatch::Dashboard
+Properties:
+  DashboardBody:
+    Fn::Sub: ${file(lib/dashboards.js):main}
+  DashboardName: SES-Forward
