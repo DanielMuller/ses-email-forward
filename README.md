@@ -3,6 +3,7 @@ Uses SES incoming SMTP to forward E-mails to the final recipient, based on https
 
 Address aliases are stored in a DynamoDB table.
 
+Management of addresses can be done in DynamoDB directly, or you can use the web-ui: [ses-email-forward-ui](https://github.com/DanielMuller/ses-email-forward-ui).
 ## Disclaimer
 ### From rewrite
 SES can only send from a validated domain. To be able to forward any "From domain", it needs to be rewritten.
@@ -106,5 +107,6 @@ All domains are passed through the spam rules:
 * Updates bounce counters in the alias table.
 
 ## Todo
-### Cloudwatch dashboard
-* Add dashboards to have an overview of rejected, bounced and delivered messages
+### Improve Logs and dashboard
+* Have better logging and display of message flows
+* Find a way to feedback false negative SPAM to SNS
