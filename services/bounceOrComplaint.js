@@ -26,8 +26,8 @@ module.exports.handler = async (event) => {
   if (type) {
     const validUntil = createdAt + blacklistTTL
 
-    var requests = []
-    var params = {
+    const requests = []
+    const params = {
       RequestItems: {},
       ReturnConsumedCapacity: 'NONE',
       ReturnItemCollectionMetrics: 'NONE'

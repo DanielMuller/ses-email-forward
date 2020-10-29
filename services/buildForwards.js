@@ -6,11 +6,11 @@ const dynamodb = new AWS.DynamoDB.DocumentClient({ convertEmptyValues: true })
 const tableNameAliases = process.env.IS_LOCAL === 'true' ? 'email-forward-aliases' : process.env.tableNameAliases
 const tableNameDefinitions = process.env.IS_LOCAL === 'true' ? 'email-forward-definitions' : process.env.tableNameDefinitions
 const tableNameBounces = process.env.IS_LOCAL === 'true' ? 'email-forward-bounces' : process.env.tableNameBounces
-var mapping = {}
-var resolvedMapping = {}
-var forwardMapping = []
-var domain = ''
-var bounceCountCache = {}
+let mapping = {}
+let resolvedMapping = {}
+let forwardMapping = []
+let domain = ''
+let bounceCountCache = {}
 
 module.exports.handler = async (event) => {
   log.info('Event', { event })
@@ -45,7 +45,7 @@ module.exports.handler = async (event) => {
 
   log.info('forwardMapping', { domain, forwardMapping })
 
-  var batchUpdate = []
+  const batchUpdate = []
   const updatedAt = Math.floor(Date.now() / 1000)
   const batchSize = 25
   for (let i = 0; i < forwardMapping.length; i++) {

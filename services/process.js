@@ -74,6 +74,10 @@ const fetchRecipients = (data) => {
         domain: emailDomain
       }
     }
+    return {
+      alias: '',
+      domain: ''
+    }
   }).filter(item => item.emailDomain !== '')
   return data
 }
