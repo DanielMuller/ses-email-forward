@@ -1,55 +1,49 @@
 'use strict'
+
+const parseEvent = require('../lib/parseEvent')
+const logDefaults = require('../lib/logDefaults')
 const log = require('lambda-log')
 
 exports.handler = (event, context, callback) => {
-  const data = validateEvent(event)
+  const data = parseEvent(event)
+
   if (data) {
-    const sesNotification = event.Records[0].ses
-    log.info('Message', { receipt: sesNotification.receipt, source: sesNotification.mail.source })
+    logDefaults(log, data)
+
+    log.info('event', { event, receipt: data.receipt })
 
     // Check if any spam check failed
-    if (sesNotification.receipt.spfVerdict.status === 'FAIL' ||
-              sesNotification.receipt.dkimVerdict.status === 'FAIL' ||
-              sesNotification.receipt.spamVerdict.status === 'FAIL' ||
-              sesNotification.receipt.virusVerdict.status === 'FAIL') {
+    if (data.receipt.spfVerdict.status === 'FAIL' ||
+              data.receipt.dkimVerdict.status === 'FAIL' ||
+              data.receipt.spamVerdict.status === 'FAIL' ||
+              data.receipt.virusVerdict.status === 'FAIL') {
       // Stop processing rule set, dropping message
-      log.info('spam', { recipients: sesNotification.receipt.recipients, source: sesNotification.mail.source })
+      let reason = 'unknown'
+      if (data.receipt.spamVerdict.status === 'FAIL') {
+        reason = 'spam'
+      } else if (data.receipt.virusVerdict.status === 'FAIL') {
+        reason = 'virus'
+      } else if (data.receipt.dkimVerdict.status === 'FAIL') {
+        reason = 'dkim'
+      } else if (data.receipt.spfVerdict.status === 'FAIL') {
+        reason = 'spf'
+      }
+      log.info('reject', { reason, recipients: data.recipients, receipt: data.receipt })
       callback(null, { disposition: 'STOP_RULE_SET' })
     } else {
       // If DMARC verdict is FAIL and the sending domain's policy is REJECT
       // (p=reject), bounce the email.
-      if (sesNotification.receipt.dmarcVerdict.status === 'FAIL' &&
-            sesNotification.receipt.dmarcPolicy.status === 'REJECT') {
-        log.info('dmarc-reject', { recipients: sesNotification.receipt.recipients, source: sesNotification.mail.source })
+      if (data.receipt.dmarcVerdict.status === 'FAIL' &&
+            data.receipt.dmarcPolicy.toLowerCase() === 'reject') {
+        log.info('reject', { reason: 'dmarc' })
         callback(null, null)
       } else {
-        log.info('pass', { recipients: sesNotification.receipt.recipients, source: sesNotification.mail.source })
+        log.info('pass', { recipients: data.recipients, receipt: data.receipt })
         callback(null, { disposition: 'STOP_RULE' })
       }
     }
   } else {
+    log.error('event', { type: 'invalid', event })
     callback(null, { disposition: 'STOP_RULE_SET' })
   }
-}
-
-const validateEvent = (event) => {
-  const data = {}
-  // Validate characteristics of a SES event record.
-
-  if (!event ||
-      !Object.prototype.hasOwnProperty.call(event, 'Records') ||
-      event.Records.length !== 1 ||
-      !Object.prototype.hasOwnProperty.call(event.Records[0], 'eventSource') ||
-      event.Records[0].eventSource !== 'aws:ses' ||
-      event.Records[0].eventVersion !== '1.0') {
-    log.error('ParseEvent', {
-      message: 'parseEvent() received invalid SES message:',
-      event: event
-    })
-    return null
-  }
-
-  data.email = event.Records[0].ses.mail
-  data.recipients = event.Records[0].ses.receipt.recipients
-  return data
 }

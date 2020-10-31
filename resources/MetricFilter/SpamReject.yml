@@ -1,10 +1,10 @@
 Type: AWS::Logs::MetricFilter
 Properties:
-  FilterPattern: "{ $._logLevel = \"info\" && $.msg=\"pass\" }"
+  FilterPattern: "{ $._logLevel = \"info\" && $.msg = \"reject\" }"
   LogGroupName:
     Ref: SpamLogGroup
   MetricTransformations:
     -
       MetricValue: 1
       MetricNamespace: SES-Forward
-      MetricName: pass
+      MetricName: reject

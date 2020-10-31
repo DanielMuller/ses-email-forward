@@ -1,4 +1,6 @@
 'use strict'
+const parseEvent = require('../lib/parseEvent')
+const logDefaults = require('../lib/logDefaults')
 const log = require('lambda-log')
 
 const AWS = require('aws-sdk')
@@ -9,13 +11,18 @@ const bucketName = process.env.IS_LOCAL === 'true' ? 'email-forward-eu-west-1' :
 const tableNameAliases = process.env.IS_LOCAL === 'true' ? 'email-forward-aliases' : process.env.tableNameAliases
 const tableNameDomains = process.env.IS_LOCAL === 'true' ? 'email-forward-domains' : process.env.tableNameDomains
 
-module.exports.handler = (event, context, callback) => {
-  log.info('Event', event)
+const bounceLimit = 0
 
-  let data = validateEvent(event)
+module.exports.handler = (event, context, callback) => {
+  const data = parseEvent(event)
+
   if (data) {
-    data = fetchRecipients(data)
-    fetchDomainAlias(data)
+    logDefaults(log, data)
+
+    log.info('event', { event })
+
+    fetchRecipients(data)
+      .then(fetchDomainAlias)
       .then(rewriteDomains)
       .then(fetchMapping)
       .then(transformRecipients)
@@ -23,6 +30,7 @@ module.exports.handler = (event, context, callback) => {
       .then(processMessage)
       .then(sendMessage)
       .then((data) => {
+        log.info('end', { data })
         callback(null, { disposition: 'STOP_RULE_SET' })
       })
       .catch((e) => { // eslint-disable-line handle-callback-err
@@ -34,30 +42,9 @@ module.exports.handler = (event, context, callback) => {
         }
       })
   } else {
-    callback()
+    log.error('event', { type: 'Invalid', event })
+    callback(null, { disposition: 'STOP_RULE_SET' })
   }
-}
-
-const validateEvent = (event) => {
-  const data = {}
-  // Validate characteristics of a SES event record.
-
-  if (!event ||
-      !Object.prototype.hasOwnProperty.call(event, 'Records') ||
-      event.Records.length !== 1 ||
-      !Object.prototype.hasOwnProperty.call(event.Records[0], 'eventSource') ||
-      event.Records[0].eventSource !== 'aws:ses' ||
-      event.Records[0].eventVersion !== '1.0') {
-    log.error('ParseEvent', {
-      message: 'parseEvent() received invalid SES message:',
-      event: event
-    })
-    return null
-  }
-
-  data.email = event.Records[0].ses.mail
-  data.recipients = event.Records[0].ses.receipt.recipients
-  return data
 }
 
 const fetchRecipients = (data) => {
@@ -79,7 +66,10 @@ const fetchRecipients = (data) => {
       domain: ''
     }
   }).filter(item => item.emailDomain !== '')
-  return data
+
+  return new Promise((resolve, reject) => {
+    resolve(data)
+  })
 }
 
 const fetchDomainAlias = (data) => {
@@ -131,26 +121,26 @@ const rewriteDomains = (data) => {
 const fetchMapping = (data) => {
   const mappings = []
   data.forwardMapping = {}
+  data.bounceReason = {}
   data.originalRecipients.forEach((originalRecipient) => {
     const params = {
       TableName: tableNameAliases,
       KeyConditionExpression: 'alias = :recipient',
+      FilterExpression: 'attribute_not_exists(bounces) or bounces = :null or bounces <= :bounceLimit',
       ExpressionAttributeValues: {
-        ':recipient': originalRecipient.alias
+        ':recipient': originalRecipient.alias,
+        ':bounceLimit': bounceLimit,
+        ':null': null
       }
     }
     const mapping = dynamodb.query(params).promise()
       .then(res => {
-        data.forwardMapping[originalRecipient.alias] = res.Items.map(item => {
-          if (!item.bounces) {
-            item.bounces = 0
-          }
-          if (item.bounces === 0) {
-            return item.destination
-          } else {
-            return null
-          }
-        }).filter(e => e !== null)
+        let bounceReason = 'none'
+        if (res.Count === 0) {
+          bounceReason = (res.ScannedCount > 0) ? 'blacklisted' : 'noexist'
+        }
+        data.bounceReason[originalRecipient.alias] = bounceReason
+        data.forwardMapping[originalRecipient.alias] = res.Items.map(item => item.destination)
         return true
       })
     mappings.push(mapping)
@@ -174,25 +164,27 @@ const transformRecipients = (data) => {
       data.originalRecipient = origAlias.alias
     } else {
       if (emailDomain) {
-        log.warn('bounce', { originalRecipient: origAlias.alias })
-        const sendBounceParams = {
-          BounceSender: `Mail Delivery Subsystem <mailer-daemon${emailDomain}>`,
-          OriginalMessageId: data.email.messageId,
-          MessageDsn: {
-            ReportingMta: `dns; ${emailDomain}`,
-            ArrivalDate: new Date(),
-            ExtensionFields: []
-          },
-          Explanation: `Unable to deliver your message to <${origEmailKey}>: Recipient address rejected: User unknown in virtual mailbox table.`,
-          BouncedRecipientInfoList: [
-            {
-              Recipient: origEmailKey,
-              BounceType: 'DoesNotExist'
-            }
-          ]
+        log.info('bounce', { reason: data.bounceReason[origEmailKey] })
+        if (process.env.IS_LOCAL !== 'true') {
+          const sendBounceParams = {
+            BounceSender: `Mail Delivery Subsystem <mailer-daemon${emailDomain}>`,
+            OriginalMessageId: data.email.messageId,
+            MessageDsn: {
+              ReportingMta: `dns; ${emailDomain}`,
+              ArrivalDate: new Date(),
+              ExtensionFields: []
+            },
+            Explanation: `Unable to deliver your message to <${origEmailKey}>: Recipient address rejected: User unknown in virtual mailbox table.`,
+            BouncedRecipientInfoList: [
+              {
+                Recipient: origEmailKey,
+                BounceType: 'DoesNotExist'
+              }
+            ]
+          }
+          const bounce = ses.sendBounce(sendBounceParams).promise()
+          data.bounces.push(bounce)
         }
-        const bounce = ses.sendBounce(sendBounceParams).promise()
-        data.bounces.push(bounce)
       }
     }
   }
@@ -200,7 +192,7 @@ const transformRecipients = (data) => {
     if (!newRecipients.length) {
       return Promise.reject(new Error('No valid recipients.'))
     }
-    data.recipients = newRecipients
+    data.newRecipients = newRecipients
     return Promise.resolve(data)
   })
 }
@@ -208,7 +200,7 @@ const transformRecipients = (data) => {
 const fetchMessage = (data) => {
   const params = {
     Bucket: bucketName,
-    Key: data.email.messageId
+    Key: data.messageId
   }
   return s3.getObject(params).promise()
     .then(result => {
@@ -298,31 +290,36 @@ const processMessage = (data) => {
 
 const sendMessage = (data) => {
   const params = {
-    Destinations: data.recipients,
+    Destinations: data.newRecipients,
     Source: data.originalRecipient,
     RawMessage: {
       Data: data.emailData
     }
   }
-  log.info('sendMessage', {
-    message: 'sendMessage: Sending email via SES. ' +
-    'Original recipients: ' + data.originalRecipients.map(e => { return e.alias }).join(', ') +
-    '. Transformed recipients: ' + data.recipients.join(', ') + '.'
-  })
+
+  const logData = {
+    recipients: data.originalRecipients.map(e => { return e.alias }).join(', '),
+    recipientsList: data.originalRecipients.map(e => { return e.alias }),
+    recipientsCount: data.originalRecipients.map(e => { return e.alias }).length,
+    destinations: data.newRecipients.join(', '),
+    destinationsList: data.newRecipients,
+    destinationsCount: data.newRecipients.length
+  }
   return new Promise(function (resolve, reject) {
     ses.sendRawEmail(params, function (err, result) {
       if (err) {
-        log.error({
-          level: 'error',
-          message: 'sendRawEmail() returned error.',
+        log.error('sendMessage', {
+          reason: 'failure',
           error: err,
-          stack: err.stack
+          stack: err.stack,
+          ...logData
         })
         return reject(new Error('Error: Email sending failed.'))
       }
       log.info('sendMessage', {
-        message: 'sendRawEmail() successful.',
-        result: result
+        reason: 'success',
+        result: result,
+        ...logData
       })
       resolve(data)
     })

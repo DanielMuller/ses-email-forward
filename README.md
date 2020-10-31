@@ -107,6 +107,4 @@ All domains are passed through the spam rules:
 * Updates bounce counters in the alias table.
 
 ## Todo
-### Improve Logs and dashboard
-* Have better logging and display of message flows
 * Find a way to feedback false negative SPAM to SNS

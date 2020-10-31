@@ -1,10 +1,10 @@
 Type: AWS::Logs::MetricFilter
 Properties:
-  FilterPattern: "{ ($._logLevel = \"warn\") && $.msg=\"bounce\"}"
+  FilterPattern: "{ $._logLevel = \"info\" && $.msg=\"sendMessage\" && $.reason = \"failure\" }"
   LogGroupName:
     Ref: ProcessLogGroup
   MetricTransformations:
     -
       MetricValue: 1
       MetricNamespace: SES-Forward
-      MetricName: bounce
+      MetricName: delivered-failure

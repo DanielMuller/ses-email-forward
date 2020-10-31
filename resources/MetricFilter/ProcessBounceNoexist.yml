@@ -1,0 +1,10 @@
+Type: AWS::Logs::MetricFilter
+Properties:
+  FilterPattern: "{ $._logLevel = \"info\" && $.msg = \"bounce\" && $.reason = \"noexist\" }"
+  LogGroupName:
+    Ref: ProcessLogGroup
+  MetricTransformations:
+    -
+      MetricValue: 1
+      MetricNamespace: SES-Forward
+      MetricName: bounce-noexist

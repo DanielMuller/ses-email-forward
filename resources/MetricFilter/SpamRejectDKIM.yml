@@ -1,10 +1,10 @@
 Type: AWS::Logs::MetricFilter
 Properties:
-  FilterPattern: "{ ($._logLevel = \"info\") && $.msg=\"dmarc-reject\"}"
+  FilterPattern: "{ $._logLevel = \"info\" && $.msg = \"reject\" && $.reason = \"dkim\" }"
   LogGroupName:
     Ref: SpamLogGroup
   MetricTransformations:
     -
       MetricValue: 1
       MetricNamespace: SES-Forward
-      MetricName: dmarc_reject
+      MetricName: reject-dkim
