@@ -108,3 +108,4 @@ All domains are passed through the spam rules:
 
 ## Todo
 * Find a way to feedback false negative SPAM to SNS
+* Use a spamassassin API (self made or https://spamcheck.postmarkapp.com/doc/)
