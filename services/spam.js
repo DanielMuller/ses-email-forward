@@ -2,6 +2,7 @@
 
 const parseEvent = require('../lib/parseEvent')
 const logDefaults = require('../lib/logDefaults')
+const mxCheck = require('../lib/mxCheck')
 const log = require('lambda-log')
 
 exports.handler = (event, context, callback) => {
@@ -38,8 +39,20 @@ exports.handler = (event, context, callback) => {
         log.info('reject', { reason: 'dmarc' })
         callback(null, null)
       } else {
-        log.info('pass', { recipients: data.recipients, receipt: data.receipt })
-        callback(null, { disposition: 'STOP_RULE' })
+        const toCheck = [
+          data.source,
+          data.email.commonHeaders.returnPath.replace(/^.*</, '').replace(/>.*$/, ''),
+          data.from.replace(/^.*</, '').replace(/>.*$/, '')
+        ]
+        mxCheck.mxExists(toCheck).then(res => {
+          if (res) {
+            log.info('pass', { recipients: data.recipients, receipt: data.receipt })
+            callback(null, { disposition: 'STOP_RULE' })
+          } else {
+            log.info('reject', { reason: 'no-mx', recipients: data.recipients, receipt: data.receipt })
+            callback(null, { disposition: 'STOP_RULE_SET' })
+          }
+        })
       }
     }
   } else {
