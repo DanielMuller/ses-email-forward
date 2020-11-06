@@ -12,6 +12,10 @@ Properties:
             Ref: S3BucketEmailForward
       - LambdaAction:
           FunctionArn:
+            Fn::GetAtt: [SpamassassinLambdaFunction, Arn]
+          InvocationType: 'RequestResponse'
+      - LambdaAction:
+          FunctionArn:
             Fn::GetAtt: [ProcessLambdaFunction, Arn]
           InvocationType: 'RequestResponse'
       - BounceAction:

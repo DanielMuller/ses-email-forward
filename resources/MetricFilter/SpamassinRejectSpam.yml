@@ -1,0 +1,10 @@
+Type: AWS::Logs::MetricFilter
+Properties:
+  FilterPattern: "{ $._logLevel = \"info\" && $.msg = \"reject\" && $.reason = \"spamassassin\" }"
+  LogGroupName:
+    Ref: SpamassassinLogGroup
+  MetricTransformations:
+    -
+      MetricValue: 1
+      MetricNamespace: SES-Forward
+      MetricName: reject-spamassassin

@@ -1,0 +1,7 @@
+handler: services/spamassassin.handler
+name: ${self:service}-spamassassin
+memorySize: 256
+timeout: 30
+environment:
+  bucketName:
+    Ref: S3BucketEmailForward
