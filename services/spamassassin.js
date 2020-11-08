@@ -25,6 +25,7 @@ exports.handler = (event, context, callback) => {
           callback()
         }
       } else {
+        log.info('fail', { reason: 'spamassassin', success: res.success, score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
         callback()
       }
     })
