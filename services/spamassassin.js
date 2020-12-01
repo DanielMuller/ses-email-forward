@@ -18,32 +18,32 @@ exports.handler = (event, context, callback) => {
 
     log.info('event', { event, receipt: data.receipt })
 
-    spamCheck(data.messageId).then(res => {
-      log.info('spamassassin', { result: res })
-      if (res.success === true) {
-        if (parseFloat(res.score) > spamThreshold) {
-          log.info('reject', { reason: 'spamassassin', rule: 'postmarkapp', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
-          callback(null, { disposition: 'STOP_RULE_SET' })
-        } else {
-          let blacklist = false
-          fromBlacklist.forEach(str => {
-            if (data.from.toLowerCase().includes(str.toLowerCase())) {
-              blacklist = true
-            }
-          })
-          if (blacklist) {
-            log.info('reject', { reason: 'spamassassin', rule: 'from-blacklisted', recipients: data.recipients, receipt: data.receipt })
-            callback(null, { disposition: 'STOP_RULE_SET' })
-          } else {
-            log.info('pass', { reason: 'spamassassin', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
-            callback()
-          }
-        }
-      } else {
-        log.info('fail', { reason: 'spamassassin', success: res.success, score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
-        callback()
+    let blacklist = false
+    fromBlacklist.forEach(str => {
+      if (data.from.toLowerCase().includes(str.toLowerCase())) {
+        blacklist = true
       }
     })
+    if (blacklist) {
+      log.info('reject', { reason: 'spamassassin', rule: 'from-blacklisted', recipients: data.recipients, receipt: data.receipt })
+      callback(null, { disposition: 'STOP_RULE_SET' })
+    } else {
+      spamCheck(data.messageId).then(res => {
+        log.info('spamassassin', { result: res })
+        if (res.success === true) {
+          if (parseFloat(res.score) > spamThreshold) {
+            log.info('reject', { reason: 'spamassassin', rule: 'postmarkapp', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
+            callback(null, { disposition: 'STOP_RULE_SET' })
+          } else {
+            log.info('pass', { reason: 'spamassassin', rule: 'postmarkapp', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
+            callback()
+          }
+        } else {
+          log.info('fail', { reason: 'spamassassin', success: res.success, score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
+          callback()
+        }
+      })
+    }
   } else {
     log.error('event', { type: 'invalid', event })
     callback(null, { disposition: 'STOP_RULE_SET' })
