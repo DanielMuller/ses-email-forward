@@ -22,7 +22,7 @@ exports.handler = (event, context, callback) => {
       log.info('spamassassin', { result: res })
       if (res.success === true) {
         if (parseFloat(res.score) > spamThreshold) {
-          log.info('reject', { reason: 'spamassassin', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
+          log.info('reject', { reason: 'spamassassin', rule: 'postmarkapp', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
           callback(null, { disposition: 'STOP_RULE_SET' })
         } else {
           let blacklist = false
