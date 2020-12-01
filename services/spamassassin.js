@@ -28,12 +28,13 @@ exports.handler = (event, context, callback) => {
           let blacklist = false
           fromBlacklist.forEach(str => {
             if (data.from.toLowerCase().includes(str.toLowerCase())) {
-              log.info('reject', { reason: 'spamassassin', rule: 'from-blacklisted', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
-              callback(null, { disposition: 'STOP_RULE_SET' })
               blacklist = true
             }
           })
-          if (!blacklist) {
+          if (blacklist) {
+            log.info('reject', { reason: 'spamassassin', rule: 'from-blacklisted', recipients: data.recipients, receipt: data.receipt })
+            callback(null, { disposition: 'STOP_RULE_SET' })
+          } else {
             log.info('pass', { reason: 'spamassassin', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
             callback()
           }
