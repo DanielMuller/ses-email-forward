@@ -6,7 +6,8 @@ const spamCheck = require('../lib/spamCheck')
 const log = require('lambda-log')
 const spamThreshold = 5.0
 const fromBlacklist = [
-  'schweizer verdienen'
+  'schweizer verdienen',
+  'crestprojects.co.in'
 ]
 
 exports.handler = (event, context, callback) => {
