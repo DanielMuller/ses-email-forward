@@ -5,7 +5,7 @@ const logDefaults = require('../lib/logDefaults')
 const spamCheck = require('../lib/spamCheck')
 const spamassassin = require('../lib/spamassassin')
 const log = require('lambda-log')
-const spamThreshold = 5.0
+const spamThreshold = 4.0
 const fromBlacklist = [
   'schweizer verdienen',
   'crestprojects.co.in',
