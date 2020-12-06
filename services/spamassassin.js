@@ -8,7 +8,8 @@ const log = require('lambda-log')
 const spamThreshold = 5.0
 const fromBlacklist = [
   'schweizer verdienen',
-  'crestprojects.co.in'
+  'crestprojects.co.in',
+  'conectamp.cl'
 ]
 
 exports.handler = (event, context, callback) => {
