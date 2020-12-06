@@ -30,7 +30,7 @@ exports.handler = (event, context, callback) => {
       callback(null, { disposition: 'STOP_RULE_SET' })
     } else {
       spamCheck(data.messageId).then(res => {
-        log.info('spamassassin', { result: res })
+        log.info('spamassassin', { rule: 'postmarkapp', result: res })
         if (res.success === true) {
           if (parseFloat(res.score) > spamThreshold) {
             log.info('reject', { reason: 'spamassassin', rule: 'postmarkapp', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
@@ -48,8 +48,16 @@ exports.handler = (event, context, callback) => {
             })
           }
         } else {
-          log.info('fail', { reason: 'spamassassin', success: res.success, score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
-          callback()
+          log.info('fail', { reason: 'spamassassin', rule: 'postmarkapp', success: res.success, score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
+          spamassassin(data.messageId).then(res => {
+            if (parseFloat(res.score) > spamThreshold) {
+              log.info('reject', { reason: 'spamassassin', rule: 'spamassassin', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
+              callback(null, { disposition: 'STOP_RULE_SET' })
+            } else {
+              log.info('pass', { reason: 'spamassassin', rule: 'spamassassin', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
+              callback()
+            }
+          })
         }
       })
     }
