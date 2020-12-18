@@ -9,7 +9,9 @@ const spamThreshold = 4.0
 const fromBlacklist = [
   'schweizer verdienen',
   'crestprojects.co.in',
-  'conectamp.cl'
+  'conectamp.cl',
+  'BTC System',
+  'Potenzpillen'
 ]
 
 exports.handler = (event, context, callback) => {
