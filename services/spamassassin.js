@@ -46,7 +46,7 @@ exports.handler = (event, context, callback) => {
                 callback(null, { disposition: 'STOP_RULE_SET' })
               } else {
                 log.info('pass', { reason: 'spamassassin', rule: 'spamassassin', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
-                callback()
+                callback(null, null)
               }
             })
           }
@@ -58,7 +58,7 @@ exports.handler = (event, context, callback) => {
               callback(null, { disposition: 'STOP_RULE_SET' })
             } else {
               log.info('pass', { reason: 'spamassassin', rule: 'spamassassin', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
-              callback()
+              callback(null, null)
             }
           })
         }

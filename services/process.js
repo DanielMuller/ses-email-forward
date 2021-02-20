@@ -38,7 +38,7 @@ module.exports.handler = (event, context, callback) => {
           callback(null, { disposition: 'STOP_RULE_SET' })
         } else {
           log.error('sendFailure', { error: e })
-          callback()
+          callback(null, null)
         }
       })
   } else {
