@@ -3,7 +3,7 @@
 const parseEvent = require('../lib/parseEvent')
 const logDefaults = require('../lib/logDefaults')
 const spamCheck = require('../lib/spamCheck')
-const spamassassin = require('../lib/spamassassin')
+// const spamassassin = require('../lib/spamassassin')
 const log = require('lambda-log')
 const spamThreshold = 4.0
 const fromBlacklist = [
@@ -40,27 +40,29 @@ exports.handler = (event, context, callback) => {
             callback(null, { disposition: 'STOP_RULE_SET' })
           } else {
             log.info('pass', { reason: 'spamassassin', rule: 'postmarkapp', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
-            spamassassin(data.messageId).then(res => {
-              if (parseFloat(res.score) > spamThreshold) {
-                log.info('reject', { reason: 'spamassassin', rule: 'spamassassin', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
-                callback(null, { disposition: 'STOP_RULE_SET' })
-              } else {
-                log.info('pass', { reason: 'spamassassin', rule: 'spamassassin', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
-                callback(null, null)
-              }
-            })
+            callback(null, null)
+            // spamassassin(data.messageId).then(res => {
+            //   if (parseFloat(res.score) > spamThreshold) {
+            //     log.info('reject', { reason: 'spamassassin', rule: 'spamassassin', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
+            //     callback(null, { disposition: 'STOP_RULE_SET' })
+            //   } else {
+            //     log.info('pass', { reason: 'spamassassin', rule: 'spamassassin', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
+            //     callback(null, null)
+            //   }
+            // })
           }
         } else {
           log.info('fail', { reason: 'spamassassin', rule: 'postmarkapp', success: res.success, score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
-          spamassassin(data.messageId).then(res => {
-            if (parseFloat(res.score) > spamThreshold) {
-              log.info('reject', { reason: 'spamassassin', rule: 'spamassassin', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
-              callback(null, { disposition: 'STOP_RULE_SET' })
-            } else {
-              log.info('pass', { reason: 'spamassassin', rule: 'spamassassin', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
-              callback(null, null)
-            }
-          })
+          callback(null, null)
+          // spamassassin(data.messageId).then(res => {
+          //   if (parseFloat(res.score) > spamThreshold) {
+          //     log.info('reject', { reason: 'spamassassin', rule: 'spamassassin', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
+          //     callback(null, { disposition: 'STOP_RULE_SET' })
+          //   } else {
+          //     log.info('pass', { reason: 'spamassassin', rule: 'spamassassin', score: parseFloat(res.score), recipients: data.recipients, receipt: data.receipt })
+          //     callback(null, null)
+          //   }
+          // })
         }
       })
     }
